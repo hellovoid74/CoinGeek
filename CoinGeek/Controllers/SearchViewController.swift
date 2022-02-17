@@ -19,6 +19,7 @@ class SearchViewController: UITableViewController {
     let manager = CryptoManager()
     var array = [CoinData]()
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -41,6 +42,7 @@ class SearchViewController: UITableViewController {
         currencies = realm.objects(CoinObjects.self)
         logos = realm.objects(LogoObjects.self)
         
+        print(currencies?.count)
         tableView.reloadData()
     }
     
@@ -127,8 +129,6 @@ extension SearchViewController: UISearchBarDelegate {
             
         }
     }
-    
-    
 }
 
 extension String {

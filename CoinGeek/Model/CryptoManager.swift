@@ -8,12 +8,9 @@
 import Foundation
 import RealmSwift
 
-
 public class CryptoManager {
     
     var array: [CoinData] = []
-    
-    let realm = try! Realm()
     
     let assets = Constants.assets
     
@@ -55,9 +52,7 @@ public class CryptoManager {
                     let results = try decoder.decode([CoinData].self, from: data)
                     
                     self.array = results.filter {$0.type_is_crypto == 1 && $0.price_usd != nil}
-                    
-                    self.printArray()
-                    
+        
                     results.filter {$0.type_is_crypto == 1 && $0.price_usd != nil}.forEach {
                         
                         guard let id = $0.asset_id else {return}
@@ -79,23 +74,25 @@ public class CryptoManager {
             }
         }.resume()
         
-    
+       
     }
     
     //MARK: - Save to realm
     
     func saveData(id: String, name: String, price: Float) {
-        DispatchQueue.main.async {
+        DispatchQueue.global().async {
+            
+            let realm = try! Realm()
             
             let coin = CoinObjects()
             
             do {
-                try self.realm.write {
+                try realm.write {
                     coin.id = id
                     coin.name = name
                     coin.price = price
                     
-                    self.realm.add(coin)
+                    realm.add(coin)
                 }
             } catch {
                 print(String(describing: error))
@@ -108,6 +105,8 @@ public class CryptoManager {
     //MARK: - Remove old data
     
     func removeOldData() {
+        
+        let realm = try! Realm()
         do {
             try realm.write {
                 
@@ -164,12 +163,5 @@ public class CryptoManager {
         }.resume()
         
     }
-    
-    
-    
-    func printArray() {
-     print(array)
-    }
-    
    
 }

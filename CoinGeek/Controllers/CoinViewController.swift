@@ -36,8 +36,7 @@ class CoinViewController: UIViewController {
 
         manager.removeOldData()
         manager.fetchData()
-        manager.printArray()
-        
+
     }
     
 
