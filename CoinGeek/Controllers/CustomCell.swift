@@ -26,20 +26,9 @@ class CustomCell: UITableViewCell {
         //shortName.text = "LOL"
         [shortName, fullName, valueLabel, currencyLabel].forEach {$0?.textColor = .white
             $0?.font = UIFont(name: "ChalkboardSE-Light", size: 15)}
-        
-        // Initialization code
-        setLabels()
+
     }
-    
-    
-    func setLabels() {
-       shortName.text = "chisto lol"
-        currencyLabel.text = "$"
-        valueLabel.text = "50"
-        
-        
-        
-    }
+ 
 
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
