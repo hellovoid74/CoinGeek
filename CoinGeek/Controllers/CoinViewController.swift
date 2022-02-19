@@ -10,40 +10,22 @@ import SnapKit
 import RealmSwift
 
 class CoinViewController: UIViewController {
-    
-    let realm = try! Realm()
-    let helper = Helper()
-    
-    let manager = CryptoManager()
-    var logos: Results<LogoObjects>?
-    var coins: Results<CoinObjects>?
-    
+
+    private let manager = CryptoManager()
+    private let dataRepository = DataRepository()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print(Realm.Configuration.defaultConfiguration.fileURL!)
-        //realm database location
-    
-        setUp()
+        dataRepository.removeOldData()
+        configureUI()
         setNavBar()
-        getData()
-        
+        fetchAPIData()
     }
     
+    //MARK: - Set up UI elements
     
-    func getData() {
-
-        manager.removeOldData()
-        manager.fetchData()
-
-    }
-    
-
-    
-    //MARK: - Set up elements
-    
-    func setUp() {
+    func configureUI() {
         
         view.backgroundColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
         
@@ -52,10 +34,9 @@ class CoinViewController: UIViewController {
             label.frame.size.width = 300
             label.frame.size.height = 40
             label.numberOfLines = 0
-            //label.backgroundColor = .none
             label.textColor = .white
-            label.font = UIFont(name: "ChalkboardSE-Regular", size: 30)
-            label.text = "Welcome to CoinGeek"
+            label.font = Fonts.mainFont
+            label.text = Constants.welcomeText
             
             return label
         }()
@@ -65,10 +46,9 @@ class CoinViewController: UIViewController {
             label.frame.size.width = 300
             label.frame.size.height = 20
             label.numberOfLines = 0
-            //label.backgroundColor = .none
             label.textColor = .white
-            label.font = UIFont(name: "ChalkboardSE-Light", size: 20)
-            label.text = "Your ultimate crypto helper"
+            label.font = Fonts.lightFont
+            label.text = Constants.descriptionText
             
             return label
         }()
@@ -108,15 +88,14 @@ class CoinViewController: UIViewController {
     }
     
     
-    //MARK: Navigation Bar Settings
+    //MARK: - Set Up Navigation Bar
     
     func setNavBar() {
         
         let rightBarButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.search, target: self, action: #selector(searchTapped))
         self.navigationItem.rightBarButtonItem = rightBarButton
         navigationController?.navigationBar.isTranslucent = false
-        // navigationController?.navigationBar.barTintColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
-        
+
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
@@ -127,10 +106,20 @@ class CoinViewController: UIViewController {
         
     }
     
-    @objc func searchTapped() {
-        performSegue(withIdentifier: "toSearch", sender: self)
+    //MARK: - Remove old data and receive new one from API
+    
+    func fetchAPIData() {
+    
+        manager.fetchData()
+        
+        print(Realm.Configuration.defaultConfiguration.fileURL!)  //realm database location
     }
-
+    
+    //MARK: - Method for pressed search button
+    
+    @objc func searchTapped() {
+        performSegue(withIdentifier: Constants.toSearchIdentifier, sender: self)
+    }
 }
 
 

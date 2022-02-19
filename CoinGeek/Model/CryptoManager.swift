@@ -10,8 +10,6 @@ import RealmSwift
 
 public class CryptoManager {
     
-    var array: [CoinData] = []
-    
     let assets = Constants.assets
     
     //MARK: Main decode method CoinApi
@@ -34,7 +32,7 @@ public class CryptoManager {
         )
         
         let session = URLSession.shared
-        let _ = session.dataTask(with: request) { data, response, error in
+        let _ = session.dataTask(with: request) {[weak self] (data, response, error) in
             if error != nil {
                 print(String(describing: error))
             }
@@ -51,8 +49,6 @@ public class CryptoManager {
                 do {
                     let results = try decoder.decode([CoinData].self, from: data)
                     
-                    self.array = results.filter {$0.type_is_crypto == 1 && $0.price_usd != nil}
-        
                     results.filter {$0.type_is_crypto == 1 && $0.price_usd != nil}.forEach {
                         
                         guard let id = $0.asset_id else {return}
@@ -60,21 +56,14 @@ public class CryptoManager {
                         
                         let price = $0.price_usd
                         
-                        self.array.append($0)
-                        
-                        self.saveData(id: id, name: name, price: price ?? 0)
-                        
+                        self?.saveData(id: id, name: name, price: price ?? 0)
                     }
                     
                 } catch {
                     print(String(describing: error))
                 }
-                
-                
             }
         }.resume()
-        
-       
     }
     
     //MARK: - Save to realm
@@ -102,32 +91,15 @@ public class CryptoManager {
     
     
     
-    //MARK: - Remove old data
-    
-    func removeOldData() {
-        
-        let realm = try! Realm()
-        do {
-            try realm.write {
-                
-                realm.delete(realm.objects(LogoObjects.self))
-                realm.delete(realm.objects(CoinObjects.self))
-            }
-        } catch {
-            print(String(describing: error))
-        }
-    }
-    
-    
     //MARK: - parsing exchange rates
     
     func parceRates(id: String) {
         
         let currentDate = Date()
         
-       // let apiKey = "A5BB84A6-B3C8-4B26-B7A8-89F5E0BCD0CF"
+        // let apiKey = "A5BB84A6-B3C8-4B26-B7A8-89F5E0BCD0CF"
         
-       // let urlStr = "https://rest.coinapi.io/v1/exchangerate/\(id)/USD?time=2021-01-15T00:00:00"
+        // let urlStr = "https://rest.coinapi.io/v1/exchangerate/\(id)/USD?time=2021-01-15T00:00:00"
         
         let urlStr = "https://api.coingecko.com/api/v3/coins/\(id)/history?date=01-01-2019&localization=en"
         
@@ -137,16 +109,17 @@ public class CryptoManager {
         
         request.httpMethod = "GET"
         
-//        request.setValue(
-//            apiKey,
-//            forHTTPHeaderField: "X-CoinAPI-Key")
-//        
+        //        request.setValue(
+        //            apiKey,
+        //            forHTTPHeaderField: "X-CoinAPI-Key")
+        //
         
         let session = URLSession.shared
         
         session.dataTask(with: request) { data, response, error in
-            if error != nil {
+            guard error != nil else {
                 print(String(describing: error))
+                return
             }
             
             guard let data = data else {return}
@@ -163,5 +136,6 @@ public class CryptoManager {
         }.resume()
         
     }
-   
+    
 }
+

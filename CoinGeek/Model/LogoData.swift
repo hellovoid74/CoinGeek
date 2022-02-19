@@ -8,7 +8,6 @@
 import Foundation
 
 struct LogoData: Decodable {
-
-let asset_id: String
-let url: String
+    let asset_id: String
+    let url: String
 }

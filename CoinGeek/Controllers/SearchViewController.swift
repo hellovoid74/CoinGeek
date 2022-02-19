@@ -12,36 +12,30 @@ class SearchViewController: UITableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     
-    var currencies: Results<CoinObjects>?
-    var logos: Results<LogoObjects>?
-    
-    let realm = try! Realm()
-    let manager = CryptoManager()
-    var array = [CoinData]()
-    
+    private var currencies: Results<CoinObjects>?
+    private var logos: Results<LogoObjects>?
+
+    private let manager = CryptoManager()
+    private let dataRepository = DataRepository()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         searchBar.delegate = self
-        
-        view.backgroundColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
-        searchBar.barTintColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
-        searchBar.searchTextField.backgroundColor = .white
         
         loadData()
         setNavBar()
-        
+    
+        view.backgroundColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
+        searchBar.barTintColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
+        searchBar.searchTextField.backgroundColor = .white
+    
         let cellNib = UINib(nibName: "CustomCell", bundle: nil)
         tableView.register(cellNib, forCellReuseIdentifier: "cell")
-        
     }
     
     func loadData() {
         
-        currencies = realm.objects(CoinObjects.self)
-        logos = realm.objects(LogoObjects.self)
-        
+        currencies = dataRepository.loadObjects()
         print(currencies?.count)
         tableView.reloadData()
     }
@@ -52,16 +46,14 @@ class SearchViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return currencies?.count ?? 1
+        return currencies?.count ?? 0
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         60
     }
     
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
         
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? CustomCell else {
             fatalError()
@@ -69,15 +61,15 @@ class SearchViewController: UITableViewController {
         
         cell.isUserInteractionEnabled = false
         
-        let crypto = currencies?[indexPath.row]
+        guard let crypto = currencies?[indexPath.row] else {return cell}
         
         DispatchQueue.main.async {
             
-            cell.shortName.text = crypto?.id
-            cell.valueLabel.text = String(String(format: "%.4f", crypto?.price ?? 0))
-            cell.fullName.text = crypto?.name
+            cell.shortName.text = crypto.id
+            cell.valueLabel.text = String(String(format: "%.4f", crypto.price))
+            cell.fullName.text = crypto.name
             cell.currencyLabel.text = "$"
-            cell.logoLabel.image = UIImage(named: crypto?.id ?? "")
+            cell.logoLabel.image = UIImage(named: crypto.id)
             if cell.logoLabel.image == nil {
                 cell.logoLabel.image = UIImage(named: "UNI")
             }
@@ -91,7 +83,6 @@ class SearchViewController: UITableViewController {
     
     func setNavBar() {
         navigationController?.navigationBar.isTranslucent = false
-        // navigationController?.navigationBar.barTintColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
         navigationController?.navigationBar.backItem?.backBarButtonItem?.tintColor = .white
         
         let appearance = UINavigationBarAppearance()
@@ -121,12 +112,7 @@ extension SearchViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
             loadData()
-            
-            
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
-            }
-            
+            searchBar.resignFirstResponder()
         }
     }
 }

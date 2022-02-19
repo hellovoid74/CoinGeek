@@ -20,21 +20,11 @@ class CustomCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         
-       // self.frame.size.height = 180
         self.backgroundColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
         self.tintColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
-        //shortName.text = "LOL"
+
         [shortName, fullName, valueLabel, currencyLabel].forEach {$0?.textColor = .white
-            $0?.font = UIFont(name: "ChalkboardSE-Light", size: 15)}
-
+            $0?.font = Fonts.cellFont}
     }
- 
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
-    
 }
 

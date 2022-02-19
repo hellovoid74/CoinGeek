@@ -23,12 +23,12 @@
 		4953ED8E27AC33EF00B1E3C0 /* CoinObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4953ED8D27AC33EF00B1E3C0 /* CoinObjects.swift */; };
 		4953ED9027AC404C00B1E3C0 /* LogoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4953ED8F27AC404C00B1E3C0 /* LogoData.swift */; };
 		4953ED9227AC462500B1E3C0 /* LogoObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4953ED9127AC462500B1E3C0 /* LogoObjects.swift */; };
-		4953ED9D27AD696A00B1E3C0 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4953ED9C27AD696A00B1E3C0 /* Helper.swift */; };
 		4953EDA127AFD47600B1E3C0 /* query.json in Resources */ = {isa = PBXBuildFile; fileRef = 4953EDA027AFD47600B1E3C0 /* query.json */; };
-		4953EDA327AFDEE300B1E3C0 /* LogoSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4953EDA227AFDEE300B1E3C0 /* LogoSaver.swift */; };
 		4953EDA627AFDF2C00B1E3C0 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4953EDA527AFDF2C00B1E3C0 /* Constants.swift */; };
 		4953EDA827AFEBC400B1E3C0 /* ExchangeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4953EDA727AFEBC400B1E3C0 /* ExchangeData.swift */; };
 		499322F227BBE7C20050A71F /* CoinGecko.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499322F127BBE7C20050A71F /* CoinGecko.swift */; };
+		49F591AB27C1174700C40F36 /* Fonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F591AA27C1174700C40F36 /* Fonts.swift */; };
+		49F591AD27C119E500C40F36 /* DataRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F591AC27C119E500C40F36 /* DataRepository.swift */; };
 		AEC55A2EFA32FB8EF49FC589 /* Pods_CoinGeek.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 858975796AD75667BB9D2C8B /* Pods_CoinGeek.framework */; };
 /* End PBXBuildFile section */
 
@@ -51,12 +51,12 @@
 		4953ED8D27AC33EF00B1E3C0 /* CoinObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinObjects.swift; sourceTree = "<group>"; };
 		4953ED8F27AC404C00B1E3C0 /* LogoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoData.swift; sourceTree = "<group>"; };
 		4953ED9127AC462500B1E3C0 /* LogoObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoObjects.swift; sourceTree = "<group>"; };
-		4953ED9C27AD696A00B1E3C0 /* Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helper.swift; sourceTree = "<group>"; };
 		4953EDA027AFD47600B1E3C0 /* query.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = query.json; path = CoinGeek/query.json; sourceTree = SOURCE_ROOT; };
-		4953EDA227AFDEE300B1E3C0 /* LogoSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoSaver.swift; sourceTree = "<group>"; };
 		4953EDA527AFDF2C00B1E3C0 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		4953EDA727AFEBC400B1E3C0 /* ExchangeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeData.swift; sourceTree = "<group>"; };
 		499322F127BBE7C20050A71F /* CoinGecko.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinGecko.swift; sourceTree = "<group>"; };
+		49F591AA27C1174700C40F36 /* Fonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fonts.swift; sourceTree = "<group>"; };
+		49F591AC27C119E500C40F36 /* DataRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataRepository.swift; sourceTree = "<group>"; };
 		7A53BE35E525D554E6545275 /* Pods-CoinGeek.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CoinGeek.release.xcconfig"; path = "Target Support Files/Pods-CoinGeek/Pods-CoinGeek.release.xcconfig"; sourceTree = "<group>"; };
 		858975796AD75667BB9D2C8B /* Pods_CoinGeek.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CoinGeek.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9BF3E69A972199C41F13DC06 /* Pods-CoinGeek.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CoinGeek.debug.xcconfig"; path = "Target Support Files/Pods-CoinGeek/Pods-CoinGeek.debug.xcconfig"; sourceTree = "<group>"; };
@@ -155,8 +155,8 @@
 		4953EDA427AFDF0F00B1E3C0 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
-				4953ED9C27AD696A00B1E3C0 /* Helper.swift */,
-				4953EDA227AFDEE300B1E3C0 /* LogoSaver.swift */,
+				49F591AC27C119E500C40F36 /* DataRepository.swift */,
+				49F591AA27C1174700C40F36 /* Fonts.swift */,
 				4953EDA527AFDF2C00B1E3C0 /* Constants.swift */,
 			);
 			path = Helpers;
@@ -290,12 +290,11 @@
 			files = (
 				49109EF327AC036F00AB9294 /* CoinData.swift in Sources */,
 				499322F227BBE7C20050A71F /* CoinGecko.swift in Sources */,
-				4953ED9D27AD696A00B1E3C0 /* Helper.swift in Sources */,
 				4953ED9027AC404C00B1E3C0 /* LogoData.swift in Sources */,
 				49109EBA27A9608600AB9294 /* AppDelegate.swift in Sources */,
-				4953EDA327AFDEE300B1E3C0 /* LogoSaver.swift in Sources */,
 				4953EDA627AFDF2C00B1E3C0 /* Constants.swift in Sources */,
 				4953ED9227AC462500B1E3C0 /* LogoObjects.swift in Sources */,
+				49F591AD27C119E500C40F36 /* DataRepository.swift in Sources */,
 				49109EE427A9A69D00AB9294 /* CustomCell.swift in Sources */,
 				49109EDD27A97F1800AB9294 /* SearchViewController.swift in Sources */,
 				49109EC427A9608600AB9294 /* CoinGeek.xcdatamodeld in Sources */,
@@ -304,6 +303,7 @@
 				4953ED8E27AC33EF00B1E3C0 /* CoinObjects.swift in Sources */,
 				49109EDB27A96DFF00AB9294 /* CoinViewController.swift in Sources */,
 				49109ED127A961CA00AB9294 /* RateViewController.swift in Sources */,
+				49F591AB27C1174700C40F36 /* Fonts.swift in Sources */,
 				49109EBC27A9608600AB9294 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
