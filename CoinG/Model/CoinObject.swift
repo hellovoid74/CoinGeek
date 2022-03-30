@@ -7,8 +7,10 @@
 
 import Foundation
 import RealmSwift
+import Combine
 
-class CoinObject: Object{
+
+class CoinObject: Object {
     @Persisted var entityKey: String = NSUUID().uuidString
     @Persisted var id: String
     @Persisted var name: String
@@ -19,6 +21,7 @@ class CoinObject: Object{
     @Persisted var position: Int
     @Persisted var bookmarked: Bool
     @Persisted var timeCreated: Date?
+    @Persisted var currency: String
      
     convenience init(id: String, name: String, symbol: String, price: Double, change24: Double, position: Int, url: String){
         self.init()
@@ -30,9 +33,49 @@ class CoinObject: Object{
         self.position = position
         self.imageUrl = url
         self.bookmarked = false
+        self.currency = currency
     }
     
     override static func primaryKey() -> String? {
         return "entityKey"
       }
+}
+
+class SelectedCurrency: Object {
+    @Persisted var currency: String
+    
+    convenience init(currency: String){
+        self.init()
+        self.currency = "usd"
+    }
+}
+
+
+class Coins: ObservableObject {
+
+    @Published var coins: Results<CoinObject>?
+    private var subscriptions = Set<AnyCancellable>()
+
+    init() {
+        let realm = try! Realm()
+        realm.objects(CoinObject.self)
+            .changesetPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { changeset in
+                self.applyChangeset(changeset)
+        }
+        .store(in: &subscriptions)
+    }
+
+    func applyChangeset(_ changes: RealmCollectionChange<Results<CoinObject>>) {
+        switch changes {
+        case .initial(let results):
+            self.coins = results
+        case .update(let results, deletions: _, insertions: _, modifications: _):
+            self.coins = results
+            self.objectWillChange.send()         
+        case .error(let error):
+            print(error.localizedDescription)
+        }
+    }
 }

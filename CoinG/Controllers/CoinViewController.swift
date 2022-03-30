@@ -12,39 +12,117 @@
 import UIKit
 import SnapKit
 import RealmSwift
+import Combine
 
 class CoinViewController: UIViewController{
     
-    private var currencies: Results<CoinObject>?
     private var currenciesToDisplay: Results<CoinObject>?
     private var favCurrenices: Results<CoinObject>?
     private let manager = CryptoManager()
     private let dataRepository = DataRepository()
     private var tableView = UITableView()
     private var segmentedControl = UISegmentedControl()
-    private var picker = PickerView()
     
-    override func viewWillAppear(_ animated: Bool) {
-        loadData()
-        self.tableView.reloadData()
-        print("entered")
+    private var picker = PickerView()
+    private var currencyToken: NotificationToken?
+    private var favCurrencyToken: NotificationToken?
+    
+    @Published private var isSegmentEnabled: Bool = false
+    private var subscriptions: AnyCancellable?
+    
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        currencyToken?.invalidate()
+        favCurrencyToken?.invalidate()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        isSegmentEnabled = dataRepository.loadFavouriteObjects().first == nil ? false : true
+        if isSegmentEnabled == false {segmentedControl.selectedSegmentIndex = 0}
+        currenciesToDisplay = segmentedControl.selectedSegmentIndex == 1 ? dataRepository.loadFavouriteObjects() : dataRepository.loadTopobjects()
+        observeChanges()
+        tableView.reloadData()
+    }
+
     override func viewDidLoad(){
         super.viewDidLoad()
-        //dataRepository.removeOldData()
-        loadData()
+        dataRepository.printLocation()
+        dataRepository.removeOldData()
         fetchAPIData()
         configureSegmentedControl()
         configureTable()
         configureUI()
         setNavBar()
+        setBinding()
     }
+    
+    func observeChanges() {
+        currencyToken = currenciesToDisplay?.observe { [weak self] changes in
+            switch changes {
+            case .initial:
+                self?.tableView.reloadData()
+                print("initial")
+            case .update(_, let deletions, let insertions, let modifications):
+                self?.tableView.beginUpdates()
+                self?.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self?.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self?.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self?.tableView.endUpdates()
+            case .error(let err):
+                fatalError("\(err)")
+            }
+        }
+    }
+    
+    func observeFavourites() {
+        favCurrencyToken = favCurrenices?.observe { [weak self] changes in
+            switch changes {
+            case .initial:
+                self?.tableView.reloadData()
+                print("initial")
+            case .update(_, let deletions, let insertions, let modifications):
+                self?.tableView.beginUpdates()
+                //self?.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self?.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self?.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                
+                self?.tableView.endUpdates()
+            case .error(let err):
+                fatalError("\(err)")
+            }
+        }
+    }
+    
+    
+    
+//    func observeFavs() {
+//     //   currencyToken?.invalidate()
+//        favCurrenices = dataRepository.loadFavouriteObjects()
+//        guard favCurrenices != nil else { return }
+//
+//        favCurrencyToken = favCurrenices!.observe { [unowned self] changes in
+//            switch changes {
+//            case .initial:
+//                //self.tableView.reloadData()
+//                print("initial")
+//            case .update(_, let deletions, let insertions, let modifications):
+//                self.tableView.beginUpdates()
+//                self.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
+//                self.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
+//                self.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
+//                self.tableView.endUpdates()
+//            case .error(let err):
+//                fatalError("\(err)")
+//            }
+//        }
+//    }
+    
     
     //MARK: - Set TableView
     
     func configureTable(){
-        currenciesToDisplay = dataRepository.loadTopobjects()
         tableView.delegate = self
         tableView.dataSource = self
         tableView.backgroundColor = Colors.main
@@ -55,33 +133,40 @@ class CoinViewController: UIViewController{
     
     //MARK: - Set segmented control
     
-    func configureSegmentedControl(){
-        let sc = UISegmentedControl(items: Constants.segmentedValues)
-        sc.selectedSegmentIndex = 0
-        sc.addTarget(self, action: #selector(handleSegmentChanged), for: .valueChanged)
-        segmentedControl = sc
+    func configureSegmentedControl() {
+        segmentedControl = UISegmentedControl(items: Constants.segmentedValues)
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.addTarget(self, action: #selector(handleSegmentChanged), for: .valueChanged)
     }
-    
+        
     @objc fileprivate func handleSegmentChanged() {
+        //currencyToken?.invalidate()
+        observeChanges()
         switch segmentedControl.selectedSegmentIndex{
         case 1:
-            currenciesToDisplay = favCurrenices
+            currenciesToDisplay = dataRepository.loadFavouriteObjects()
         default:
-            currenciesToDisplay = currencies
+            currenciesToDisplay = dataRepository.loadTopobjects()
         }
-        tableView.reloadData()
+        
+        //self.tableView.reloadData()
+        print(tableView.numberOfRows(inSection: 0))
+    }
+    
+    //MARK: - Enable/disable segmentedElement if there are favourites
+    
+    private func setBinding() {
+        subscriptions = $isSegmentEnabled
+            .sink(receiveValue: {[unowned self] value in
+                self.segmentedControl.setEnabled(value, forSegmentAt: 1)
+            })
     }
     
     //MARK: - Receive new data from API
     
     func fetchAPIData(){
-        dataRepository.printLocation()
         manager.performRequests()
-    }
-    
-    func loadData(){
-        currencies = dataRepository.loadTopobjects()
-        favCurrenices = dataRepository.loadFavouriteObjects()
+        currenciesToDisplay = dataRepository.loadTopobjects()
     }
     
     //MARK: - Set up UI elements
@@ -239,21 +324,28 @@ extension CoinViewController: UITableViewDelegate, UITableViewDataSource{
             
             cell.shortName.text = crypto?.symbol.uppercased()
             cell.valueLabel.text = String(format: "%.2f", crypto?.price ?? "") + " \(symbol)"
-            cell.fullName.text = crypto?.name
+            cell.fullName.text = String(describing: crypto?.name ?? "")
             cell.changeLabel.text = String(format: "%.2f", crypto?.change24h ?? "") + " %"
-            
-            guard let url = URL(string: crypto?.imageUrl ?? "") else {return}
-            ImageService.getImage(withURL: url) { image in
-                cell.logoLabel.image = image
-            }
+            //
+            //            guard let url = URL(string: crypto?.imageUrl ?? "") else {return}
+            //            ImageService.getImage(withURL: url) { image in
+            //                cell.logoLabel.image = image
+            //            }
         }
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard let count = currenciesToDisplay?.count else {return 0}
-        return count
+        guard let _ = currenciesToDisplay?.count else {return 0}
+        
+        switch segmentedControl.selectedSegmentIndex {
+        case 1:
+            return dataRepository.loadFavouriteObjects().count
+        default:
+            return dataRepository.loadTopobjects().count
+        }
     }
+    
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
@@ -262,6 +354,19 @@ extension CoinViewController: UITableViewDelegate, UITableViewDataSource{
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: Constants.toCoinVC, sender: self)
     }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        
+        guard let cell = cell as? CustomCell else { return }
+        guard let object = currenciesToDisplay?[indexPath.row] else {return}
+        guard let url = URL(string: object.imageUrl) else {return}
+        
+        cell.logoLabel.image = nil
+        
+        ImageService.getImage(withURL: url) { image in
+            cell.logoLabel.image = image
+        }
+    }
 }
 
 extension UIView {
@@ -269,3 +374,5 @@ extension UIView {
         return safeAreaLayoutGuide.snp
     }
 }
+
+

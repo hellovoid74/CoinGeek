@@ -14,19 +14,20 @@ public class CryptoManager {
     
     var delegate: DetailDelegate?
     private let dataRepository = DataRepository()
+    private weak var task: URLSessionTask?
     var currency: String?
     
- 
+    
     //MARK: - parsing rates for SearchViewController
     
-    func performRequests() {
-        let currencyKey = UserDefaults.standard.object(forKey: Constants.currencyKey)
-        currency = currencyKey == nil ? "usd" : currencyKey as! String
+    func performRequests(for currency: String = "usd") {
         
-        let firstUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(String(describing: currency))&order=market_cap_desc&per_page=500&page=1&sparkline=false"
-        let secondUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(String(describing: currency))&order=market_cap_desc&per_page=500&page=2&sparkline=false"
-        
+        let firstUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(currency)&order=market_cap_desc&per_page=500&page=1&sparkline=false"
         fetchData(firstUrl)
+    }
+    
+    func performSecondRequests(for currency: String = "usd") {
+        let secondUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(currency)&order=market_cap_desc&per_page=500&page=2&sparkline=false"
         fetchData(secondUrl)
     }
     
@@ -36,7 +37,7 @@ public class CryptoManager {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         let session = URLSession.shared
-        let _ = session.dataTask(with: request) {[weak self] (data, _, error) in
+        let task = session.dataTask(with: request) {[weak self] (data, _, error) in
             if error != nil {
                 print(String(describing: error))
             }
@@ -51,11 +52,6 @@ public class CryptoManager {
                             
                             if let createdObject = self?.dataRepository.loadObjects().filter("id=%@", $0.id).first{
                                 self?.dataRepository.updateObject(createdObject, with: ["price": $0.current_price, "change24h": $0.price_change_percentage_24h, "position": $0.market_cap_rank])
-                                
-                                if createdObject.imageUrl == "" {
-                                    self?.dataRepository.updateObject(createdObject, with: ["imageUrl": $0.image])
-                                    print("created url")
-                                }
                             }
                             else {
                                 let object = CoinObject(id: $0.id, name: $0.name, symbol: $0.symbol, price: $0.current_price, change24: $0.price_change_percentage_24h ?? 0, position: $0.market_cap_rank, url: $0.image ?? "")
@@ -67,7 +63,16 @@ public class CryptoManager {
                     print(String(describing: error))
                 }
             }
-        }.resume()
+        }
+        
+        task.resume()
+        
+        self.task = task
+    }
+    
+    func cancelTask() {
+        task?.cancel()
+        print("cancelled")
     }
     
     //MARK: - parse coin information for DetailViewController
@@ -132,3 +137,5 @@ public class CryptoManager {
         }.resume()
     }
 }
+
+

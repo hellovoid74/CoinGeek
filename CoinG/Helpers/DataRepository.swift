@@ -9,6 +9,8 @@ import RealmSwift
 
 class DataRepository {
     
+    static let sharedData = DataRepository()
+    
     let realm = try! Realm()
     
     //MARK: - Print realm location
@@ -47,6 +49,16 @@ class DataRepository {
     
     //MARK: - Load data from realm
     
+    func loadFirstViewObjects() -> Results<CoinObject>{
+        let frealm = try! Realm()
+        let firstP = NSPredicate.init(format: "position < 26")
+        let secondP = NSPredicate.init(format: "bookmarked == true")
+        let query = NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.or, subpredicates: [firstP, secondP])
+        let result = frealm.objects(CoinObject.self).filter(query)
+        print("loadFirstViewObj count is \(result)")
+        return result
+    }
+    
     func loadObjects() -> Results<CoinObject>{
         let frealm = try! Realm()
         return frealm.objects(CoinObject.self).sorted(byKeyPath: "position", ascending: true)
@@ -54,12 +66,22 @@ class DataRepository {
     
     func loadFavouriteObjects() -> Results<CoinObject>{
         let frealm = try! Realm()
+        print("Triggered fav objects")
         return frealm.objects(CoinObject.self).filter("bookmarked == true").sorted(byKeyPath: "timeCreated", ascending: true)
     }
     
     func loadTopobjects() -> Results<CoinObject>{
         let frealm = try! Realm()
+        print("Triggered Top objects")
         return frealm.objects(CoinObject.self).filter("position < 26").sorted(byKeyPath: "position", ascending: true)
+    }
+    
+    func getCurrency() -> Object{
+        var object = Object()
+        if let value = realm.objects(SelectedCurrency.self).first {
+             object = value
+        }
+        return object
     }
     
   

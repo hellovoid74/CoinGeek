@@ -296,7 +296,7 @@ extension DetailViewController: DetailDelegate{
                 let markedText = detail.info.convertHref()
                 let text = try NSMutableAttributedString(markdown: markedText)
                 let range = NSRange(location: 0, length: text.length)
-                text.addAttributes([NSMutableAttributedString.Key.foregroundColor: UIColor.white, NSMutableAttributedString.Key.font: Fonts.cellFont], range: range)
+                text.addAttributes([NSMutableAttributedString.Key.foregroundColor: UIColor.white, NSMutableAttributedString.Key.font: Fonts.smallNum], range: range)
                 self.infoView.attributedText = text
             } catch {
                 print(String(describing: error))

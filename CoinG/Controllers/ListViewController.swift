@@ -39,7 +39,7 @@ class ListViewController: UITableViewController {
     
     func loadData() {
         currencies = dataRepository.loadObjects()
-        temp = dataRepository.loadObjects()
+        temp = currencies
         tableView.reloadData()
     }
     
@@ -84,7 +84,6 @@ class ListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         60
     }
-    
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? CustomCell else {

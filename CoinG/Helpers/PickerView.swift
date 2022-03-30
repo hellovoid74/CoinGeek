@@ -5,8 +5,12 @@
 //  Created by Gleb Lanin on 15/03/2022.
 
 import UIKit
-
+import Combine
 class PickerView: UIView{
+    
+    //var selectedCurrency = CurrentValueSubject<String, Never>("usd")
+    //var subscriptions = Set<AnyCancellable>()
+    
     let manager = CryptoManager()
     let defaults = UserDefaults.standard
     
@@ -39,16 +43,15 @@ class PickerView: UIView{
         alert.addAction(UIAlertAction(title: "Select", style: .default, handler: { (UIAlertAction) in
             self.backgroundColor = .gray
             self.selectedRow = pickerView.selectedRow(inComponent: 0)
-            let selected = self.arr[self.selectedRow].lowercased()
-            self.defaults.set(selected, forKey: Constants.currencyKey)
-           print(selected, UserDefaults.standard.object(forKey: Constants.currencyKey))
-            self.manager.performRequests()
+            let selectedCurrency = self.arr[self.selectedRow].lowercased()
+            self.defaults.set(selectedCurrency, forKey: Constants.currencyKey)
+            self.manager.cancelTask()
+            self.manager.performRequests(for: selectedCurrency)
         }))
         
         viewController.present(alert, animated: true, completion: nil)
     }
 }
-
 
 extension PickerView: UIPickerViewDelegate, UIPickerViewDataSource{
     func numberOfComponents(in pickerView: UIPickerView) -> Int
@@ -72,7 +75,7 @@ extension PickerView: UIPickerViewDelegate, UIPickerViewDataSource{
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         let selected = arr[row]
-        print("Chosen \(selected)")
-        self.manager.performRequests()
+        
+        print("Currency now is \(selected)")
     }
 }
