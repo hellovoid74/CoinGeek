@@ -66,24 +66,15 @@ class DataRepository {
     
     func loadFavouriteObjects() -> Results<CoinObject>{
         let frealm = try! Realm()
-        print("Triggered fav objects")
         return frealm.objects(CoinObject.self).filter("bookmarked == true").sorted(byKeyPath: "timeCreated", ascending: true)
     }
     
     func loadTopobjects() -> Results<CoinObject>{
         let frealm = try! Realm()
-        print("Triggered Top objects")
         return frealm.objects(CoinObject.self).filter("position < 26").sorted(byKeyPath: "position", ascending: true)
     }
     
-    func getCurrency() -> Object{
-        var object = Object()
-        if let value = realm.objects(SelectedCurrency.self).first {
-             object = value
-        }
-        return object
-    }
-    
+
   
     //MARK: - Remove old data
     

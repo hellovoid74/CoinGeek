@@ -43,13 +43,12 @@ class CoinViewController: UIViewController{
         if isSegmentEnabled == false {segmentedControl.selectedSegmentIndex = 0}
         currenciesToDisplay = segmentedControl.selectedSegmentIndex == 1 ? dataRepository.loadFavouriteObjects() : dataRepository.loadTopobjects()
         observeChanges()
-        tableView.reloadData()
     }
-
+    
     override func viewDidLoad(){
         super.viewDidLoad()
         dataRepository.printLocation()
-        dataRepository.removeOldData()
+        //dataRepository.removeOldData()
         fetchAPIData()
         configureSegmentedControl()
         configureTable()
@@ -58,12 +57,20 @@ class CoinViewController: UIViewController{
         setBinding()
     }
     
+    //MARK: - Receive new data from API
+    
+    func fetchAPIData(){
+        manager.performRequests()
+        currenciesToDisplay = dataRepository.loadTopobjects()
+    }
+    
+    //MARK: - Observe changes
+    
     func observeChanges() {
         currencyToken = currenciesToDisplay?.observe { [weak self] changes in
             switch changes {
             case .initial:
                 self?.tableView.reloadData()
-                print("initial")
             case .update(_, let deletions, let insertions, let modifications):
                 self?.tableView.beginUpdates()
                 self?.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
@@ -75,50 +82,6 @@ class CoinViewController: UIViewController{
             }
         }
     }
-    
-    func observeFavourites() {
-        favCurrencyToken = favCurrenices?.observe { [weak self] changes in
-            switch changes {
-            case .initial:
-                self?.tableView.reloadData()
-                print("initial")
-            case .update(_, let deletions, let insertions, let modifications):
-                self?.tableView.beginUpdates()
-                //self?.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self?.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self?.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
-                
-                self?.tableView.endUpdates()
-            case .error(let err):
-                fatalError("\(err)")
-            }
-        }
-    }
-    
-    
-    
-//    func observeFavs() {
-//     //   currencyToken?.invalidate()
-//        favCurrenices = dataRepository.loadFavouriteObjects()
-//        guard favCurrenices != nil else { return }
-//
-//        favCurrencyToken = favCurrenices!.observe { [unowned self] changes in
-//            switch changes {
-//            case .initial:
-//                //self.tableView.reloadData()
-//                print("initial")
-//            case .update(_, let deletions, let insertions, let modifications):
-//                self.tableView.beginUpdates()
-//                self.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
-//                self.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
-//                self.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
-//                self.tableView.endUpdates()
-//            case .error(let err):
-//                fatalError("\(err)")
-//            }
-//        }
-//    }
-    
     
     //MARK: - Set TableView
     
@@ -138,19 +101,17 @@ class CoinViewController: UIViewController{
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.addTarget(self, action: #selector(handleSegmentChanged), for: .valueChanged)
     }
-        
+    
     @objc fileprivate func handleSegmentChanged() {
-        //currencyToken?.invalidate()
-        observeChanges()
+        currencyToken?.invalidate()
+        
         switch segmentedControl.selectedSegmentIndex{
         case 1:
             currenciesToDisplay = dataRepository.loadFavouriteObjects()
         default:
             currenciesToDisplay = dataRepository.loadTopobjects()
         }
-        
-        //self.tableView.reloadData()
-        print(tableView.numberOfRows(inSection: 0))
+        observeChanges()
     }
     
     //MARK: - Enable/disable segmentedElement if there are favourites
@@ -162,11 +123,47 @@ class CoinViewController: UIViewController{
             })
     }
     
-    //MARK: - Receive new data from API
+    //MARK: - Set Up Navigation Bar
     
-    func fetchAPIData(){
-        manager.performRequests()
-        currenciesToDisplay = dataRepository.loadTopobjects()
+    func setNavBar() {
+        let rightBarButton = UIBarButtonItem(image: Constants.Images.list, style: .plain, target: self, action: #selector(searchTapped))
+        let switchBarButton = UIBarButtonItem(image: Constants.Images.globe, style: .plain, target: self, action: #selector(changeCurrencypressed))
+        
+        self.navigationItem.rightBarButtonItems = [rightBarButton, switchBarButton]
+        navigationController?.navigationBar.isTranslucent = false
+        navigationController?.navigationBar.shadowImage = UIImage()
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.shadowColor = .clear
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = Colors.main
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navigationItem.standardAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+        navigationItem.compactAppearance = appearance
+    }
+    
+    //MARK: - Handle pressed List button
+    
+    @objc fileprivate func searchTapped(){
+        
+        performSegue(withIdentifier: Constants.toListId, sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == Constants.toCoinVC {
+            let destinationVC = segue.destination as! DetailViewController
+            
+            if let indexPath = tableView.indexPathForSelectedRow{
+                destinationVC.selectedDetail = currenciesToDisplay?[indexPath.row]
+            }
+        }
+    }
+    
+    //MARK: - Handle change currency
+    
+    @objc fileprivate func changeCurrencypressed(){
+        picker.addAlert(on: self)
     }
     
     //MARK: - Set up UI elements
@@ -245,49 +242,6 @@ class CoinViewController: UIViewController{
             $0.centerX.equalTo(view.snp.centerX)
         }
     }
-    
-    //MARK: - Set Up Navigation Bar
-    
-    func setNavBar() {
-        let rightBarButton = UIBarButtonItem(image: Constants.Images.list, style: .plain, target: self, action: #selector(searchTapped))
-        let switchBarButton = UIBarButtonItem(image: Constants.Images.globe, style: .plain, target: self, action: #selector(changeCurrencypressed))
-        
-        self.navigationItem.rightBarButtonItems = [rightBarButton, switchBarButton]
-        navigationController?.navigationBar.isTranslucent = false
-        navigationController?.navigationBar.shadowImage = UIImage()
-        
-        let appearance = UINavigationBarAppearance()
-        appearance.shadowColor = .clear
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = Colors.main
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navigationItem.standardAppearance = appearance
-        navigationItem.scrollEdgeAppearance = appearance
-        navigationItem.compactAppearance = appearance
-    }
-    
-    //MARK: - Handle pressed List button
-    
-    @objc fileprivate func searchTapped(){
-        
-        performSegue(withIdentifier: Constants.toListId, sender: self)
-    }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == Constants.toCoinVC {
-            let destinationVC = segue.destination as! DetailViewController
-            
-            if let indexPath = tableView.indexPathForSelectedRow{
-                destinationVC.selectedDetail = currenciesToDisplay?[indexPath.row]
-            }
-        }
-    }
-    
-    //MARK: - Handle change currency
-    
-    @objc fileprivate func changeCurrencypressed(){
-        picker.addAlert(on: self)
-    }
 }
 
 //MARK: - Tableview Datasource and Delegate methods
@@ -320,17 +274,12 @@ extension CoinViewController: UITableViewDelegate, UITableViewDataSource{
             }
             
             let selectedCurrency = UserDefaults.standard.string(forKey: Constants.currencyKey)
-            guard let symbol = Constants.currencyDict[selectedCurrency ?? "usd"] else {return}
+            let symbol = Constants.currencyDict[selectedCurrency ?? "usd"]!
             
             cell.shortName.text = crypto?.symbol.uppercased()
             cell.valueLabel.text = String(format: "%.2f", crypto?.price ?? "") + " \(symbol)"
             cell.fullName.text = String(describing: crypto?.name ?? "")
             cell.changeLabel.text = String(format: "%.2f", crypto?.change24h ?? "") + " %"
-            //
-            //            guard let url = URL(string: crypto?.imageUrl ?? "") else {return}
-            //            ImageService.getImage(withURL: url) { image in
-            //                cell.logoLabel.image = image
-            //            }
         }
         return cell
     }
@@ -360,8 +309,6 @@ extension CoinViewController: UITableViewDelegate, UITableViewDataSource{
         guard let cell = cell as? CustomCell else { return }
         guard let object = currenciesToDisplay?[indexPath.row] else {return}
         guard let url = URL(string: object.imageUrl) else {return}
-        
-        cell.logoLabel.image = nil
         
         ImageService.getImage(withURL: url) { image in
             cell.logoLabel.image = image

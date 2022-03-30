@@ -11,16 +11,17 @@ protocol DetailDelegate {
 }
 
 public class CryptoManager {
+    static let crypto = CryptoManager()
     
     var delegate: DetailDelegate?
     private let dataRepository = DataRepository()
     private weak var task: URLSessionTask?
-    var currency: String?
+    private var currencyKey = UserDefaults.standard.value(forKey: Constants.currencyKey) as? String
     
     
     //MARK: - parsing rates for SearchViewController
     
-    func performRequests(for currency: String = "usd") {
+    func performRequests(for currency: String = crypto.currencyKey ?? "usd") {
         
         let firstUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(currency)&order=market_cap_desc&per_page=500&page=1&sparkline=false"
         fetchData(firstUrl)
@@ -78,6 +79,8 @@ public class CryptoManager {
     //MARK: - parse coin information for DetailViewController
     
     func fetchDetails(_ id: String, _ index: Int = 0) {
+        
+        
         let str = "https://api.coingecko.com/api/v3/coins/\(id)"
         
         guard let url = URL(string: str) else {return}
@@ -111,8 +114,9 @@ public class CryptoManager {
                             text = "No information available"
                         }
                         
-                        guard let price = results.market_data.current_price[self?.currency ?? "usd"] else {return}
-                        guard let market = results.market_data.market_cap[self?.currency ?? "usd"] else {return}
+                        let currency = UserDefaults.standard.value(forKey: Constants.currencyKey) as? String
+                        guard let price = results.market_data.current_price[currency ?? "usd"] else {return}
+                        guard let market = results.market_data.market_cap[currency ?? "usd"] else {return}
                         var percentage = 0.0
                         
                         switch index{

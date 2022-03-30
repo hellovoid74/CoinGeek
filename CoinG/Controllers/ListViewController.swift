@@ -22,6 +22,7 @@ class ListViewController: UITableViewController {
     private let manager = CryptoManager()
     private let dataRepository = DataRepository()
     private let imageService = ImageService()
+    private var currencyToken = NotificationToken()
     
     override func viewWillDisappear(_ animated: Bool) {
         search(shouldShow: false)
@@ -40,8 +41,28 @@ class ListViewController: UITableViewController {
     func loadData() {
         currencies = dataRepository.loadObjects()
         temp = currencies
+        observe()
         tableView.reloadData()
     }
+    
+    func observe() {
+        guard let arr = currencies else {return}
+        currencyToken = arr.observe { [unowned self] changes in
+            switch changes {
+            case .initial:
+                self.tableView.reloadData()
+            case .update(_, let deletions, let insertions, let modifications):
+                self.tableView.beginUpdates()
+                self.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self.tableView.endUpdates()
+            case .error(let err):
+                fatalError("\(err)")
+            }
+        }
+    }
+    
     
     //MARK: - Configure tableView
     
@@ -112,7 +133,7 @@ class ListViewController: UITableViewController {
             }
             
             let selectedCurrency = UserDefaults.standard.string(forKey: Constants.currencyKey)
-            guard let symbol = Constants.currencyDict[selectedCurrency ?? "usd"] else {return}
+            let symbol = Constants.currencyDict[selectedCurrency ?? "usd"]!
             
             cell.shortName.text = crypto?.symbol.uppercased()
             cell.valueLabel.text = String(format: "%.2f", crypto?.price ?? "") + " \(symbol)"
@@ -209,6 +230,7 @@ extension ListViewController: UISearchBarDelegate {
         tableView.reloadData()
     }
 }
+
 
 //extension UIImageView {
 //    public func downloaded(from url: URL, contentMode mode: ContentMode = .scaleAspectFit) {
