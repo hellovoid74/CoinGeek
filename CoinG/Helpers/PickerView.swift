@@ -6,20 +6,17 @@
 
 import UIKit
 import Combine
+
 class PickerView: UIView{
     
-    //var selectedCurrency = CurrentValueSubject<String, Never>("usd")
-    //var subscriptions = Set<AnyCancellable>()
+    private let manager = CryptoManager()
+    private let defaults = UserDefaults.standard
     
-    let manager = CryptoManager()
-    let defaults = UserDefaults.standard
+    private let screenWidth = UIScreen.main.bounds.width - 10
+    private let screenHeight = UIScreen.main.bounds.height / 4
+    private var selectedRow = 0
     
-    let screenWidth = UIScreen.main.bounds.width - 10
-    let screenHeight = UIScreen.main.bounds.height / 4
-    var selectedRow = 0
-    //var selectedRowTextColor = 0
-    
-    var arr = Constants.currencySet
+    private let arr = Constants.currencySet
     
     func addAlert(with title: String = "Choose curency", on viewController: UIViewController){
         let vc = UIViewController()
@@ -41,12 +38,13 @@ class PickerView: UIView{
         }))
         
         alert.addAction(UIAlertAction(title: "Select", style: .default, handler: { (UIAlertAction) in
-            self.backgroundColor = .gray
+
             self.selectedRow = pickerView.selectedRow(inComponent: 0)
             let selectedCurrency = self.arr[self.selectedRow].lowercased()
             self.defaults.set(selectedCurrency, forKey: Constants.currencyKey)
             self.manager.cancelTask()
             self.manager.performRequests(for: selectedCurrency)
+       
         }))
         
         viewController.present(alert, animated: true, completion: nil)
@@ -75,7 +73,6 @@ extension PickerView: UIPickerViewDelegate, UIPickerViewDataSource{
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         let selected = arr[row]
-        
         print("Currency now is \(selected)")
     }
 }

@@ -41,28 +41,8 @@ class ListViewController: UITableViewController {
     func loadData() {
         currencies = dataRepository.loadObjects()
         temp = currencies
-        observe()
         tableView.reloadData()
     }
-    
-    func observe() {
-        guard let arr = currencies else {return}
-        currencyToken = arr.observe { [unowned self] changes in
-            switch changes {
-            case .initial:
-                self.tableView.reloadData()
-            case .update(_, let deletions, let insertions, let modifications):
-                self.tableView.beginUpdates()
-                self.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self.tableView.endUpdates()
-            case .error(let err):
-                fatalError("\(err)")
-            }
-        }
-    }
-    
     
     //MARK: - Configure tableView
     
@@ -139,7 +119,6 @@ class ListViewController: UITableViewController {
             cell.valueLabel.text = String(format: "%.2f", crypto?.price ?? "") + " \(symbol)"
             cell.fullName.text = crypto?.name
             cell.changeLabel.text = String(format: "%.2f", crypto?.change24h ?? "") + " %"
-            
         }
         return cell
     }
@@ -148,20 +127,22 @@ class ListViewController: UITableViewController {
     //MARK: - SetNavBar
     func setNavBar() {
         navigationController?.navigationBar.isTranslucent = true
-        navigationController?.navigationBar.backItem?.backBarButtonItem?.tintColor = .white
+        navigationController?.navigationBar.backItem?.backBarButtonItem?.tintColor = Colors.side
         navigationController?.navigationItem.leftBarButtonItem = .none
         self.navigationItem.title = Constants.markets
         
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = Colors.main
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.titleTextAttributes = [.foregroundColor: Colors.side]
         navigationItem.standardAppearance = appearance
         navigationItem.scrollEdgeAppearance = appearance
         navigationItem.compactAppearance = appearance
+        navigationController?.navigationBar.barTintColor = Colors.side
         
     }
     //MARK: - Set up SearchBar
+    
     func setSearchBar() {
         searchBar.delegate = self
         searchBar.frame.size.height = 40
@@ -193,6 +174,7 @@ class ListViewController: UITableViewController {
     }
     
     //MARK: - Handle refresh control
+    
     func setRefreshControl(){
         view.backgroundColor = Colors.main
         tableView.refreshControl = UIRefreshControl()
@@ -200,7 +182,8 @@ class ListViewController: UITableViewController {
     }
     
     @objc func handleRefreshControl(){
-        tableView.reloadData()
+        manager.performRequests(for: UserDefaults.standard.string(forKey: Constants.currencyKey) ?? "usd")
+        currencies = dataRepository.loadObjects()
         DispatchQueue.main.async {
             self.tableView.refreshControl?.endRefreshing()
         }

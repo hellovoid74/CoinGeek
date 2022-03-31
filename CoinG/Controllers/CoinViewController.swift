@@ -25,7 +25,6 @@ class CoinViewController: UIViewController{
     
     private var picker = PickerView()
     private var currencyToken: NotificationToken?
-    private var favCurrencyToken: NotificationToken?
     
     @Published private var isSegmentEnabled: Bool = false
     private var subscriptions: AnyCancellable?
@@ -34,13 +33,11 @@ class CoinViewController: UIViewController{
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         currencyToken?.invalidate()
-        favCurrencyToken?.invalidate()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         isSegmentEnabled = dataRepository.loadFavouriteObjects().first == nil ? false : true
-        if isSegmentEnabled == false {segmentedControl.selectedSegmentIndex = 0}
         currenciesToDisplay = segmentedControl.selectedSegmentIndex == 1 ? dataRepository.loadFavouriteObjects() : dataRepository.loadTopobjects()
         observeChanges()
     }
@@ -67,16 +64,16 @@ class CoinViewController: UIViewController{
     //MARK: - Observe changes
     
     func observeChanges() {
-        currencyToken = currenciesToDisplay?.observe { [weak self] changes in
+        currencyToken = currenciesToDisplay?.observe { [unowned self] changes in
             switch changes {
             case .initial:
-                self?.tableView.reloadData()
+                self.tableView.reloadData()
             case .update(_, let deletions, let insertions, let modifications):
-                self?.tableView.beginUpdates()
-                self?.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self?.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self?.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
-                self?.tableView.endUpdates()
+                self.tableView.beginUpdates()
+                self.tableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self.tableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self.tableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .none)
+                self.tableView.endUpdates()
             case .error(let err):
                 fatalError("\(err)")
             }
@@ -99,6 +96,8 @@ class CoinViewController: UIViewController{
     func configureSegmentedControl() {
         segmentedControl = UISegmentedControl(items: Constants.segmentedValues)
         segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
+        segmentedControl.selectedSegmentTintColor = Colors.side
         segmentedControl.addTarget(self, action: #selector(handleSegmentChanged), for: .valueChanged)
     }
     
@@ -112,6 +111,8 @@ class CoinViewController: UIViewController{
             currenciesToDisplay = dataRepository.loadTopobjects()
         }
         observeChanges()
+        self.tableView.reloadData()
+        
     }
     
     //MARK: - Enable/disable segmentedElement if there are favourites
@@ -120,16 +121,23 @@ class CoinViewController: UIViewController{
         subscriptions = $isSegmentEnabled
             .sink(receiveValue: {[unowned self] value in
                 self.segmentedControl.setEnabled(value, forSegmentAt: 1)
+                if value == false {
+                    self.segmentedControl.selectedSegmentIndex = 0
+                }
             })
     }
     
     //MARK: - Set Up Navigation Bar
     
     func setNavBar() {
+        
         let rightBarButton = UIBarButtonItem(image: Constants.Images.list, style: .plain, target: self, action: #selector(searchTapped))
         let switchBarButton = UIBarButtonItem(image: Constants.Images.globe, style: .plain, target: self, action: #selector(changeCurrencypressed))
+        let calcBarButton = UIBarButtonItem(image: Constants.Images.calc, style: .plain, target: self, action: #selector(openCalc))
         
         self.navigationItem.rightBarButtonItems = [rightBarButton, switchBarButton]
+        self.navigationItem.leftBarButtonItem = calcBarButton
+        self.navigationItem.title = "CoinGeek"
         navigationController?.navigationBar.isTranslucent = false
         navigationController?.navigationBar.shadowImage = UIImage()
         
@@ -137,7 +145,7 @@ class CoinViewController: UIViewController{
         appearance.shadowColor = .clear
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = Colors.main
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.titleTextAttributes = [.foregroundColor: Colors.side]
         navigationItem.standardAppearance = appearance
         navigationItem.scrollEdgeAppearance = appearance
         navigationItem.compactAppearance = appearance
@@ -166,6 +174,15 @@ class CoinViewController: UIViewController{
         picker.addAlert(on: self)
     }
     
+    @objc fileprivate func openCalc() {
+        let calc = CalculatorViewController()
+        if let sheet = calc.presentationController as? UISheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(calc, animated: true)
+    }
+    
     //MARK: - Set up UI elements
     
     func configureUI(){
@@ -174,29 +191,16 @@ class CoinViewController: UIViewController{
         
         let infoLabel: UILabel = {
             let label = UILabel()
-            label.frame.size.width = 300
-            label.frame.size.height = 40
             label.numberOfLines = 0
-            label.textColor = .white
+            label.textAlignment = .center
+            label.textColor = UIColor.white
             label.font = Fonts.mainFont
             label.text = Constants.welcomeText
             
             return label
         }()
         
-        let lowerLabel: UILabel = {
-            let label = UILabel()
-            label.frame.size.width = 300
-            label.frame.size.height = 20
-            label.numberOfLines = 0
-            label.textColor = .white
-            label.font = Fonts.headerFont
-            label.text = Constants.descriptionText
-            
-            return label
-        }()
-        
-        let logoImage = UIImage(named: "wallet") ?? .none
+        let logoImage = Constants.Images.logo ?? .none
         
         let logoImageView: UIImageView = {
             let imgView = UIImageView()
@@ -209,22 +213,19 @@ class CoinViewController: UIViewController{
             return imgView
         }()
         
-        [infoLabel, logoImageView, lowerLabel, tableView, segmentedControl].forEach {view.addSubview($0)}
+        [infoLabel, logoImageView, tableView, segmentedControl].forEach {view.addSubview($0)}
         
         infoLabel.snp.makeConstraints {
             $0.centerX.equalTo(self.view)
             $0.top.equalTo(logoImageView.snp.bottom)
-        }
-        
-        lowerLabel.snp.makeConstraints {
-            $0.centerX.equalTo(self.view)
-            $0.top.equalTo(infoLabel.snp.bottom)
+            $0.height.equalTo(40)
+            $0.width.equalTo(300)
         }
         
         logoImageView.snp.makeConstraints { make in
             make.height.equalTo(150)
             make.centerX.equalTo(self.view)
-            make.top.equalToSuperview().inset(50)
+            make.top.equalTo(view.safeArea.top).offset(3)
             make.width.equalTo(150)
         }
         
@@ -235,7 +236,7 @@ class CoinViewController: UIViewController{
             $0.bottom.equalToSuperview()
         }
         
-        segmentedControl.snp.makeConstraints{
+        segmentedControl.snp.makeConstraints {
             $0.bottom.equalTo(tableView.snp.top)
             $0.width.equalTo(view.snp.width).multipliedBy(0.9)
             $0.height.equalTo(40)
@@ -295,7 +296,6 @@ extension CoinViewController: UITableViewDelegate, UITableViewDataSource{
         }
     }
     
-    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
     }
@@ -310,6 +310,7 @@ extension CoinViewController: UITableViewDelegate, UITableViewDataSource{
         guard let object = currenciesToDisplay?[indexPath.row] else {return}
         guard let url = URL(string: object.imageUrl) else {return}
         
+        cell.logoLabel.image = nil
         ImageService.getImage(withURL: url) { image in
             cell.logoLabel.image = image
         }

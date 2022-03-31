@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 
 enum Fonts{
-    static let mainFont = UIFont(name: "ChalkboardSE-Regular", size: 30)
+    static let mainFont = UIFont(name: "ChalkboardSE-Regular", size: 20)
     static let lightFont = UIFont(name: "ChalkboardSE-Light", size: 20)
     static let cellFont = UIFont(name: "ChalkboardSE-Light", size: 15)
     static let textFont = UIFont(name: "Fredoka-Light", size: 18)

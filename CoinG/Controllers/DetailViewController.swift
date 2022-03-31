@@ -49,6 +49,105 @@ class DetailViewController: UIViewController {
         loadData()
         setLikeButton()
     }
+    //MARK: - Load data
+    
+    func loadData(){
+        guard let object = selectedDetail else {return}
+        manager.fetchDetails(object.id)
+        graphManager.getHistoricalData(id: object.id)
+    }
+    
+    //MARK: - SetNavBar
+    
+    func setNavBar(){
+        guard let object = selectedDetail else {return}
+        
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.barTintColor = Colors.main
+        navigationController?.navigationItem.leftBarButtonItem = .none
+        self.navigationItem.title = object.name
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: Colors.side]
+        navigationItem.standardAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+        navigationItem.compactAppearance = appearance
+    }
+    
+    //MARK: - Set segmented control
+    
+    func configureSegmentedControl(){
+        let sc = UISegmentedControl(items: Constants.segmentedIntervals)
+        sc.selectedSegmentIndex = 0
+        segmentedControl.backgroundColor = Colors.main
+        segmentedControl.tintColor = .white
+        sc.addTarget(self, action: #selector(handleSegmentChanged), for: .valueChanged)
+        segmentedControl = sc
+    }
+    
+    @objc fileprivate func handleSegmentChanged(){
+        guard let object = selectedDetail else {return}
+        
+        switch segmentedControl.selectedSegmentIndex{
+        case 1:
+            graphManager.getHistoricalData(id: object.id, for: 1)
+            manager.fetchDetails(object.id, 1)
+        case 2:
+            graphManager.getHistoricalData(id: object.id, for: 2)
+            manager.fetchDetails(object.id, 2)
+        case 3:
+            graphManager.getHistoricalData(id: object.id, for: 3)
+            manager.fetchDetails(object.id, 3)
+        default:
+            graphManager.getHistoricalData(id: object.id)
+            manager.fetchDetails(object.id)
+        }
+    }
+    
+    //MARK: - Set loading view
+    
+    private func setLoadingView() {
+        view.addSubview(loadingView)
+        loadingView.backgroundColor = Colors.main
+        activityIndicator.color = .lightGray
+        activityIndicator.transform = CGAffineTransform.init(scaleX: 1.5, y: 1.5)
+        activityIndicator.hidesWhenStopped = true
+        loadingView.addSubview(activityIndicator)
+        activityIndicator.startAnimating()
+    }
+    
+    //MARK: - Handle bookmark button
+    
+    private func setLikeButton(){
+        guard let object = selectedDetail else {return}
+        
+        self.likedButton = UIBarButtonItem(image: Constants.Images.heartFill, style: .plain, target: self, action: #selector(handleLikeButton))
+        self.dislikedButton = UIBarButtonItem(image: Constants.Images.heart, style: .plain, target: self, action: #selector(handleDislikeButton))
+        self.navigationItem.rightBarButtonItem = object.bookmarked ? self.likedButton : self.dislikedButton
+    }
+    
+    @objc func handleLikeButton(_ sender: UIBarButtonItem){
+        updateObject()
+        self.navigationItem.setRightBarButton(self.dislikedButton, animated: false)
+    }
+    
+    @objc func handleDislikeButton(_ sender: UIBarButtonItem){
+        updateObject()
+        self.navigationItem.setRightBarButton(likedButton, animated: false)
+    }
+    
+    //MARK: - Update object in Realm
+    
+    private func updateObject(){
+        let date = Date()
+        guard let object = selectedDetail else {return}
+        var switcher = object.bookmarked
+        switcher = !switcher
+        dataRepository.updateObject(object, with: ["bookmarked": switcher, "timeCreated": date])
+    }
+    
+    //MARK: - Configure UI
     
     func configureUI(){
         view.backgroundColor = Colors.main
@@ -167,7 +266,7 @@ class DetailViewController: UIViewController {
             $0.width.equalTo(15)
             $0.height.equalTo(18)
         }
-    
+        
         marketLabel.snp.makeConstraints{
             $0.left.equalTo(priceLabel)
             $0.top.equalTo(changeLabel.snp.bottom).offset(1)
@@ -184,106 +283,9 @@ class DetailViewController: UIViewController {
             $0.center.equalTo(loadingView.snp.center)
         }
     }
-    
-    func loadData(){
-        guard let object = selectedDetail else {return}
-        manager.fetchDetails(object.id)
-        graphManager.getHistoricalData(id: object.id)
-        print("Selected coin is \(object.id)")
-    }
-    
-    //MARK: - SetNavBar
-    
-    func setNavBar(){
-        guard let object = selectedDetail else {return}
-        
-        navigationController?.navigationBar.isTranslucent = true
-        navigationController?.navigationBar.barTintColor = Colors.main
-        navigationController?.navigationItem.leftBarButtonItem = .none
-        self.navigationItem.title = object.name
-        
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navigationItem.standardAppearance = appearance
-        navigationItem.scrollEdgeAppearance = appearance
-        navigationItem.compactAppearance = appearance
-    }
-    
-    //MARK: - Set segmented control
-    
-    func configureSegmentedControl(){
-        let sc = UISegmentedControl(items: Constants.segmentedIntervals)
-        sc.selectedSegmentIndex = 0
-        segmentedControl.backgroundColor = Colors.main
-        segmentedControl.tintColor = .white
-        sc.addTarget(self, action: #selector(handleSegmentChanged), for: .valueChanged)
-        segmentedControl = sc
-    }
-    
-    @objc fileprivate func handleSegmentChanged(){
-        guard let object = selectedDetail else {return}
-        
-        switch segmentedControl.selectedSegmentIndex{
-        case 1:
-            graphManager.getHistoricalData(id: object.id, for: 1)
-            manager.fetchDetails(object.id, 1)
-        case 2:
-            graphManager.getHistoricalData(id: object.id, for: 2)
-            manager.fetchDetails(object.id, 2)
-        case 3:
-            graphManager.getHistoricalData(id: object.id, for: 3)
-            manager.fetchDetails(object.id, 3)
-        default:
-            graphManager.getHistoricalData(id: object.id)
-            manager.fetchDetails(object.id)
-        }
-    }
-    
-    //MARK: - Set loading view
-    
-    private func setLoadingView() {
-        view.addSubview(loadingView)
-        loadingView.backgroundColor = Colors.main
-        activityIndicator.color = .lightGray
-        activityIndicator.transform = CGAffineTransform.init(scaleX: 1.5, y: 1.5)
-        activityIndicator.hidesWhenStopped = true
-                    loadingView.addSubview(activityIndicator)
-        activityIndicator.startAnimating()
-    }
-    
-    //MARK: - Handle bookmark button
-    
-    private func setLikeButton(){
-        guard let object = selectedDetail else {return}
-        
-        self.likedButton = UIBarButtonItem(image: Constants.Images.heartFill, style: .plain, target: self, action: #selector(handleLikeButton))
-        self.dislikedButton = UIBarButtonItem(image: Constants.Images.heart, style: .plain, target: self, action: #selector(handleDislikeButton))
-        
-        self.navigationItem.rightBarButtonItem = object.bookmarked ? self.likedButton : self.dislikedButton
-    }
-    
-    @objc func handleLikeButton(_ sender: UIBarButtonItem){
-        updateObject()
-        self.navigationItem.setRightBarButton(self.dislikedButton, animated: false)
-    }
-    
-    @objc func handleDislikeButton(_ sender: UIBarButtonItem){
-        updateObject()
-        self.navigationItem.setRightBarButton(likedButton, animated: false)
-    }
-    
-    //MARK: - Update object in Realm
-    
-    private func updateObject(){
-        let date = Date()
-        guard let object = selectedDetail else {return}
-        var switcher = object.bookmarked
-        switcher = !switcher
-        dataRepository.updateObject(object, with: ["bookmarked": switcher, "timeCreated": date])
-        print("Updated item with \(switcher)")
-    }
 }
+
+//MARK: - Update coin data
 
 extension DetailViewController: DetailDelegate{
     func didUpdateData(_ manager: CryptoManager, detail: DetailModel, for periodIndex: Int) {
@@ -327,6 +329,8 @@ extension DetailViewController: DetailDelegate{
         }
     }
 }
+
+//MARK: - Draw chart
 
 extension DetailViewController: ChartDelegate, ChartViewDelegate{
     func drawChart(_ manager: GraphManager, model: HistoryModel) {
@@ -396,7 +400,7 @@ extension Int {
                 prevAbbreviation = tmpAbbreviation
             }
             return prevAbbreviation
-        } ()
+        }()
         let value = Double(self) / abbreviation.divisor
         numFormatter.positiveSuffix = abbreviation.suffix
         numFormatter.negativeSuffix = abbreviation.suffix

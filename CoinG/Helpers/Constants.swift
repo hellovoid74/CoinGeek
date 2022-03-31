@@ -10,7 +10,7 @@ import UIKit
 
 enum Constants{
     //text
-    static let welcomeText = "Welcome To CoinGeek"
+    static let welcomeText = "Your Ultimate Crypto Helper"
     static let markets = "Markets"
     static let descriptionText = "Your ultimate crypto helper"
     static let segmentedValues = ["All markets", "Favourites"]
@@ -34,6 +34,8 @@ enum Constants{
         static let list = UIImage(systemName: "list.dash")
         static let dollar = UIImage(systemName: "dollarsign.square")
         static let globe = UIImage(systemName: "globe")
+        static let logo = UIImage(named: "logo2")
+        static let calc = UIImage(systemName: "bahtsign.circle")
     }
 }
 

@@ -10,7 +10,7 @@ protocol DetailDelegate {
     func didUpdateData(_ manager: CryptoManager, detail: DetailModel, for periodIndex: Int)
 }
 
-public class CryptoManager {
+public class CryptoManager: Operation {
     static let crypto = CryptoManager()
     
     var delegate: DetailDelegate?
@@ -20,9 +20,8 @@ public class CryptoManager {
     
     
     //MARK: - parsing rates for SearchViewController
-    
-    func performRequests(for currency: String = crypto.currencyKey ?? "usd") {
         
+    func performRequests(for currency: String = crypto.currencyKey ?? "usd") {
         let firstUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(currency)&order=market_cap_desc&per_page=500&page=1&sparkline=false"
         fetchData(firstUrl)
     }
@@ -65,7 +64,6 @@ public class CryptoManager {
                 }
             }
         }
-        
         task.resume()
         
         self.task = task

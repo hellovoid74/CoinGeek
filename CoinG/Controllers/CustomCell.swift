@@ -21,8 +21,8 @@ class CustomCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         
-        self.backgroundColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
-        self.tintColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
+        self.backgroundColor = Colors.main
+       // self.tintColor = UIColor(cgColor: CGColor(red: 34/255, green: 40/255, blue: 49/255, alpha: 1))
         
         changeLabel.textAlignment = .right
         valueLabel.textAlignment = .right

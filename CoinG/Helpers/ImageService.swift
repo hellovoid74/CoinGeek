@@ -18,6 +18,7 @@ class ImageService {
                 let data = data, error == nil,
                 let image = UIImage(data: data)
             else { return }
+            cache.setObject(image, forKey: url.absoluteString as NSString)
             DispatchQueue.main.async() {
                 completion(image)
             }
